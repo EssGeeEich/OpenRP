@@ -2,13 +2,15 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QMessageBox>
+#include <QDir>
 #include "startupwindow.h"
 
 GameWindow::GameWindow(QWindow* parent, GameMode gamemode, StartupWindow* startupWindow) :
     QOpenGLWindow(QOpenGLWindow::NoPartialUpdate, parent),
     state(Lua::State::create()),
     m_gamemode(gamemode),
-    m_startupWindow(startupWindow)
+    m_startupWindow(startupWindow),
+    m_basePath(QDir::currentPath())
 {
     this->setTitle(tr("OpenRP - %1 - %2").arg(QCoreApplication::applicationVersion()).arg(m_gamemode.Name));
     state.luapp_register_metatables();
@@ -71,6 +73,11 @@ static const luaL_Reg loadedlibs[] = {
     {NULL, NULL}
 };
 
+std::string GameWindow::DataPath() const
+{
+     return m_basePath.toStdString() + "/gamemode/" + m_gamemode.SubFolder.toStdString() + "/data/";
+}
+
 void GameWindow::registerLuaFunctions()
 {
     {
@@ -80,12 +87,15 @@ void GameWindow::registerLuaFunctions()
             state.pop(1);
         }
     }
+    state.luapp_register_object<LuaApi::Texture>();
+    state.luapp_register_object<LuaApi::Shader>();
+    state.luapp_register_object<LuaApi::Object>();
 
     for(auto it = m_gamemode.Modules.begin(); it != m_gamemode.Modules.end(); ++it)
     {
         QString str = *it;
         if(str.at(0) != '/')
-            str = "gamemode/" + m_gamemode.SubFolder + "/" + *it;
+            str = m_basePath + "/gamemode/" + m_gamemode.SubFolder + "/" + *it;
         else
             str.remove(0,1);
 

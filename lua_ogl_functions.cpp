@@ -49,16 +49,18 @@ bool Storage::InitAll(GL_t* gl, GameWindow* gw, Lua::State& state)
         return false;
     
 #define REG_NAMED_FUNC(name, fnc) state.luapp_add_translated_function( #name, Lua::Transform(fnc) )
-//#define REG_LAMBDA(name, fnc) REG_NAMED_FUNC(name, fnc)
+#define REG_LAMBDA(name, fnc) REG_NAMED_FUNC(name, Lua::ToFnc(fnc))
 #define REG_FUNC(fnc) state.luapp_add_translated_function( #fnc, Lua::Transform(fnc))
 #define REG_NAMED_MEM_FUNC(name, var, type, fnc) state.luapp_add_translated_function( #name, Lua::Transform(var, &type::fnc))
 #define REG_MEM_FUNC(var, type, fnc) state.luapp_add_translated_function( #fnc, Lua::Transform(var, &type::fnc))
 #define REG_NAMED_CONST(name, var) { state.pushinteger(var); state.setglobal( #name ); }
 #define REG_CONST(var) { state.pushinteger(var); state.setglobal( #var ); }
+#define REG_NAMED_CONSTF(name, var) { state.pushnumber(var); state.setglobal( #name ); }
+#define REG_CONSTF(var) { state.pushnumber(var); state.setglobal( #var ); }
     
         // Standard constants
         REG_CONST(RAND_MAX);
-        REG_NAMED_CONST(PI, M_PI)
+        REG_NAMED_CONSTF(PI, M_PI)
         
         // Standard Functions
         REG_NAMED_FUNC(rand, std::rand);
@@ -73,6 +75,14 @@ bool Storage::InitAll(GL_t* gl, GameWindow* gw, Lua::State& state)
         REG_MEM_FUNC(m_square, SquareShape, DrawRaw);
         REG_MEM_FUNC(m_square, SquareShape, DrawRawCentered);
         REG_MEM_FUNC(m_square, SquareShape, DrawCorrected);
+        REG_MEM_FUNC(m_ds, DrawableState, SetTexture);
+        
+        REG_NAMED_MEM_FUNC(data, *gw, GameWindow, DataPath);
+        
+        /*REG_LAMBDA(data, []()->void{
+            gw->
+        });*/
+        
     return true;
 }
 

@@ -1,6 +1,7 @@
 #include "lua_ogl_link.h"
 #include "gamewindow.h"
 #include <QOpenGLFunctions>
+#include <QDebug>
 
 namespace LuaApi {
 
@@ -30,6 +31,7 @@ std::size_t Texture::TexData::height() const
 bool Texture::load(std::string const& path, Lua::Arg<bool> const& genMipMaps)
 {
     unload();
+    qDebug() << QString::fromStdString(path);
     m_data = std::make_shared<TexData>(QString::fromStdString(path),genMipMaps.get_safe(false));
     if(!m_data->isValid())
     {
@@ -53,6 +55,46 @@ QOpenGLTexture* Texture::texture() const
     if(m_data)
         return &(m_data->texture());
     return nullptr;
+}
+bool Texture::good() const
+{
+    return m_data.get() != nullptr;
+}
+void Texture::setfilter(std::uint32_t flag) {
+    if(m_data)
+    {
+        QOpenGLTexture::Filter f;
+        switch(flag)
+        {
+        case GL_NEAREST:
+            f = QOpenGLTexture::Nearest;
+            break;
+        case GL_NEAREST_MIPMAP_LINEAR:
+            f = QOpenGLTexture::NearestMipMapLinear;
+            break;
+        case GL_NEAREST_MIPMAP_NEAREST:
+            f = QOpenGLTexture::NearestMipMapNearest;
+            break;
+        case GL_LINEAR:
+            f = QOpenGLTexture::Linear;
+            break;
+        case GL_LINEAR_MIPMAP_LINEAR:
+            f = QOpenGLTexture::LinearMipMapLinear;
+            break;
+        case GL_LINEAR_MIPMAP_NEAREST:
+            f = QOpenGLTexture::LinearMipMapNearest;
+            break;
+        default:
+            return;
+        }
+
+        m_data->texture().setMinificationFilter(f);
+        m_data->texture().setMagnificationFilter(f);
+    }
+}
+void Texture::setanisotropy(float max) {
+    if(m_data)
+        m_data->texture().setMaximumAnisotropy(max);
 }
 
 // Shader
@@ -107,6 +149,7 @@ void Shader::unload()
     m_program.reset();
 }
 QOpenGLShaderProgram* Shader::shader() const { return m_program.get(); }
+bool Shader::good() const { return m_program.get() != nullptr; }
 
 // Object impl
 namespace impl {
@@ -360,6 +403,10 @@ impl::ObjectData_Base* Object::data() const
 {
     return m_data.get();
 }
+bool Object::good() const
+{
+    return m_data.get() != nullptr;
+}
 
 // DrawableState
 void DrawableState::SetShader(Shader shd) {
@@ -463,7 +510,9 @@ bool SquareShape::OnInitialize()
 Shader SquareShape::SelectShader() {
     return m_shader;
 }
-Texture SquareShape::SelectTexture(std::size_t ix) { return m_state.texture(ix); }
+Texture SquareShape::SelectTexture(std::size_t ix) {
+    return m_state.texture(ix);
+}
 
 void SquareShape::DrawRaw(float x, float y, float w, float h)
 {

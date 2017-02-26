@@ -15,6 +15,7 @@ class GameWindow : public QOpenGLWindow, public GL_t
 public:
     explicit GameWindow(QWindow* parent, GameMode gamemode, StartupWindow* startupWindow);
     ~GameWindow();
+    std::string DataPath() const;
 
 protected:
     void initializeGL() override;
@@ -28,6 +29,7 @@ protected:
 
     void CloseToStartupWindow();
     void CloseToDesktop();
+    
 private:
     void subRegisterLuaFunctions();
     void glToLua();
@@ -36,6 +38,7 @@ private:
     GameMode m_gamemode;
     StartupWindow* m_startupWindow;
     LuaApi::Storage m_storage;
+    QString m_basePath;
 };
 
 #endif // GAMEWINDOW_H
