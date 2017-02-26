@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>shaders/quad/frag.fsh</file>
+        <file>shaders/quad/vert.vsh</file>
+        <file>textures/error.png</file>
+    </qresource>
+</RCC>
