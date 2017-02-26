@@ -22,7 +22,7 @@ namespace impl {
 
     static float const inv_1000 = static_cast<float>(1.0 / 1000.0);
     float timef() {
-        return static_cast<float>(time_Integer()) * inv_1000;
+        return static_cast<float>(timei()) * inv_1000;
     }
     
     float clampf(float val, float min, float max) {
