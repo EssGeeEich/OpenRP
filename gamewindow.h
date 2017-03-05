@@ -42,6 +42,8 @@ protected:
 
     void CloseToStartupWindow();
     void CloseToDesktop();
+    void SetRequireCPath(std::string const&);
+    void SetRequirePath(std::string const&);
     
 private:
     bool preCallLuaFunction(char const*);

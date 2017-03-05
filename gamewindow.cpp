@@ -80,6 +80,22 @@ std::string GameWindow::DataPath() const
      return m_basePath.toStdString() + "/gamemode/" + m_gamemode.SubFolder.toStdString() + "/data/";
 }
 
+void GameWindow::SetRequireCPath(std::string const& cpath)
+{
+    state.getglobal("package");
+    state.pushstdstring(cpath);
+    state.setfield(-2, "cpath");
+    state.pop(1);
+}
+
+void GameWindow::SetRequirePath(std::string const& path)
+{
+    state.getglobal("package");
+    state.pushstdstring(path);
+    state.setfield(-2, "path");
+    state.pop(1);
+}
+
 void GameWindow::registerLuaFunctions()
 {
     {
@@ -89,18 +105,42 @@ void GameWindow::registerLuaFunctions()
             state.pop(1);
         }
     }
+    SetRequireCPath(std::string());
+    SetRequirePath(std::string());
     state.luapp_register_object<LuaApi::Texture>();
     state.luapp_register_object<LuaApi::Shader>();
     state.luapp_register_object<LuaApi::Object>();
     state.luapp_register_object<LuaApi::Timer>();
+    subRegisterLuaFunctions();
 
+    std::string ApiPath = m_basePath.toStdString() + "/api/";
+    std::string GmPath = m_basePath.toStdString() + "/gamemode/" + m_gamemode.SubFolder.toStdString() + "/";
+    
+    std::string ApiRequirements =
+            ApiPath + "?.lua;" +
+            ApiPath + "modules/?.lua;" +
+            ApiPath + "lua/?.lua";
+    
+    std::string GamemodeRequirements =
+            ApiRequirements + ";" +
+            GmPath + "?.lua;" +
+            GmPath + "modules/?.lua;" +
+            GmPath + "lua/?.lua";
+    
     for(auto it = m_gamemode.Modules.begin(); it != m_gamemode.Modules.end(); ++it)
     {
         QString str = *it;
         if(str.at(0) != '/')
+        {
             str = m_basePath + "/gamemode/" + m_gamemode.SubFolder + "/" + *it;
+            SetRequirePath(GamemodeRequirements);
+        }
         else
+        {
             str.remove(0,1);
+            str = m_basePath + "/" + str;
+            SetRequirePath(ApiRequirements);
+        }
 
         if(state.loadfile(str.toStdString().c_str()) != 0)
         {
@@ -117,8 +157,9 @@ void GameWindow::registerLuaFunctions()
             return;
         }
     }
+    
+    SetRequirePath(GamemodeRequirements);
 
-    subRegisterLuaFunctions();
 }
 
 void GameWindow::CloseToStartupWindow()
@@ -150,7 +191,8 @@ bool GameWindow::callLuaFunction(const char* name, int args)
     if(state.pcall(args) != 0)
     {
         hide();
-        QMessageBox::critical(nullptr,tr("Error running gamemode %1").arg(m_gamemode.Name),tr("Lua Error while calling fundamental function: %1.\nLua Error: %1").arg(QString(name)).arg(QString::fromStdString(state.tostdstring(1))));
+        QMessageBox::critical(nullptr,tr("Error running gamemode %1").arg(m_gamemode.Name),
+                              tr("Lua Error while calling fundamental function: %1.\nLua Error: %2").arg(QString(name)).arg(QString::fromStdString(state.tostdstring(1))));
         CloseToStartupWindow();
         return false;
     }

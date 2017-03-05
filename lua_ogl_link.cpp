@@ -1,7 +1,6 @@
 #include "lua_ogl_link.h"
 #include "gamewindow.h"
 #include <QOpenGLFunctions>
-#include <QDebug>
 #include <fstream>
 
 namespace LuaApi {
@@ -32,7 +31,6 @@ std::size_t Texture::TexData::height() const
 bool Texture::load(std::string const& path, Lua::Arg<bool> const& genMipMaps)
 {
     unload();
-    qDebug() << QString::fromStdString(path);
     m_data = std::make_shared<TexData>(QString::fromStdString(path),genMipMaps.get_safe(false));
     if(!m_data->isValid())
     {
