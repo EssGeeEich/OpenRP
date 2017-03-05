@@ -23,6 +23,19 @@ protected:
     void paintGL() override;
     void paintUnderGL() override;
     void paintOverGL() override;
+    
+    void focusInEvent(QFocusEvent *) override;
+    void focusOutEvent(QFocusEvent *) override;
+    void hideEvent(QHideEvent *) override;
+    void exposeEvent(QExposeEvent *) override;
+    
+    void keyPressEvent(QKeyEvent *) override;
+    void keyReleaseEvent(QKeyEvent *) override;
+    
+    void mouseMoveEvent(QMouseEvent *) override;
+    void mousePressEvent(QMouseEvent *) override;
+    void mouseReleaseEvent(QMouseEvent *) override;
+    void wheelEvent(QWheelEvent *) override;
 
     void printContextInformations();
     void registerLuaFunctions();
@@ -31,6 +44,8 @@ protected:
     void CloseToDesktop();
     
 private:
+    bool preCallLuaFunction(char const*);
+    bool callLuaFunction(char const*, int =0);
     void subRegisterLuaFunctions();
     void glToLua();
     Lua::State state;

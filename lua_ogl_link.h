@@ -2,6 +2,7 @@
 #define LUA_OGL_LINK_H
 #include <exception>
 #include <memory>
+#include <chrono>
 #include <QOpenGLFunctions_4_4_Core>
 #include <QOpenGLBuffer>
 #include <QOpenGLFramebufferObject>
@@ -141,6 +142,7 @@ namespace LuaApi {
         Object& operator= (Object const&) =default;
         Object& operator= (Object&&) =default;
         
+        bool load(std::string const&);
         bool create(std::uint32_t);
         bool create_indexed(std::uint32_t);
         bool setindices(Lua::Array<std::uint16_t> const&);
@@ -243,9 +245,41 @@ namespace LuaApi {
         Storage();
         bool InitAll(GL_t*, GameWindow*, Lua::State&);
     };
+    
+    class Timer {
+    public:
+        typedef std::chrono::high_resolution_clock clock;
+    private:
+        bool m_running;
+        clock::time_point m_start;
+        clock::time_point m_time;
+    public:
+        Timer();
+        void update();
+        std::uint64_t timei() const;
+        float timef() const;
+        
+        void start();
+        void stop();
+        void reset();
+        bool running() const;
+    };
 }
 
-
+template <> struct MetatableDescriptor<LuaApi::Timer> {
+    static char const* name() { return "timer_mt"; }
+    static char const* luaname() { return "timer"; }
+    static char const* constructor() { return "create"; }
+    static void metatable(Lua::member_function_storage<LuaApi::Timer>& mt) {
+        mt["update"] = Lua::Transform(&LuaApi::Timer::update);
+        mt["timei"] = Lua::Transform(&LuaApi::Timer::timei);
+        mt["timef"] = Lua::Transform(&LuaApi::Timer::timef);
+        mt["start"] = Lua::Transform(&LuaApi::Timer::start);
+        mt["stop"] = Lua::Transform(&LuaApi::Timer::stop);
+        mt["reset"] = Lua::Transform(&LuaApi::Timer::reset);
+        mt["running"] = Lua::Transform(&LuaApi::Timer::running);
+    }
+};
 template <> struct MetatableDescriptor<LuaApi::Texture> {
     static char const* name() { return "texture_mt"; }
     static char const* luaname() { return "texture"; }

@@ -2,6 +2,7 @@
 #include "gamewindow.h"
 #include <QOpenGLFunctions>
 #include <QDebug>
+#include <fstream>
 
 namespace LuaApi {
 
@@ -199,6 +200,234 @@ std::uint32_t ObjectData_Indexed::indices() const { return m_indices; }
 }
 
 // Object
+enum DescriptorType {
+    DT_INVALID = 0,
+    DT_RAW = 'R',
+    DT_INDEXED = 'I',
+    DT_INDEXED_32 = 'i'
+};
+enum VertexBufferType {
+    VBT_INVALID =0,
+    VBT_1D,
+    VBT_2D,
+    VBT_3D,
+    VBT_4D
+};
+
+struct ObjectDescriptor {
+    struct VertexBufferDescriptor {
+        inline VertexBufferDescriptor()
+            : m_type(VBT_INVALID) {}
+        VertexBufferType m_type;
+        Lua::Array<float> m_array;
+    };
+    
+    inline ObjectDescriptor()
+        : m_descriptorType(DT_INVALID),
+          m_vertexCount(0) {}
+    
+    DescriptorType m_descriptorType;
+    std::uint32_t m_vertexCount;
+    VertexBufferDescriptor m_vertices[16];
+    Lua::Array<std::uint16_t> m_indices16;
+    Lua::Array<std::uint32_t> m_indices32;
+    
+    bool Save(std::ofstream& file) const {
+        char header[] = "LMF ";
+        header[3] = static_cast<char>(m_descriptorType);
+        if(!file.write(header,4))
+            return false;
+        
+        if(!file.write(reinterpret_cast<char const*>(&m_vertexCount),sizeof(m_vertexCount)))
+            return false;
+        for(int i = 0; i < 16; ++i)
+        {
+            if(!file.write(reinterpret_cast<char const*>(&(m_vertices[i].m_type)),sizeof(m_vertices[i].m_type)))
+                return false;
+            switch(m_vertices[i].m_type)
+            {
+            case VBT_1D:
+            case VBT_2D:
+            case VBT_3D:
+            case VBT_4D:
+                break;
+            default:
+                return false;
+            }
+
+            if(!file.write(reinterpret_cast<char const*>(m_vertices[i].m_array.m_data.data()),m_vertices[i].m_array.m_data.size() * sizeof(float)))
+                return false;
+        }
+        
+        switch(m_descriptorType)
+        {
+        case DT_INDEXED:
+            if(!file.write(reinterpret_cast<char const*>(m_indices16.m_data.data()), m_indices16.m_data.size() * sizeof(std::uint16_t)))
+                return false;
+            break;
+        case DT_INDEXED_32:
+            if(!file.write(reinterpret_cast<char const*>(m_indices32.m_data.data()), m_indices32.m_data.size() * sizeof(std::uint32_t)))
+                return false;
+            break;
+        case DT_RAW:
+            break;
+        default:
+            return false;
+        }
+        return true;
+    }
+    bool Load(std::ifstream& file) {
+        char header[4];
+        file.read(header,4);
+        if(header[0] != 'L' ||
+                header[1] != 'M' ||
+                header[2] != 'F')
+            return false;
+        
+        switch(header[3])
+        {
+        case DT_RAW:
+            m_descriptorType = DT_RAW;
+            break;
+        case DT_INDEXED:
+            m_descriptorType = DT_INDEXED;
+            break;
+        case DT_INDEXED_32:
+            m_descriptorType = DT_INDEXED_32;
+            break;
+        default:
+            m_descriptorType = DT_INVALID;
+            return false;
+        }
+        
+        if(!file.read(reinterpret_cast<char*>(&m_vertexCount),sizeof(m_vertexCount)))
+            return false;
+        for(int i = 0; i < 16; ++i)
+        {
+            if(!file.read(reinterpret_cast<char*>(&(m_vertices[i].m_type)),sizeof(m_vertices[i].m_type)))
+                return false;
+            switch(m_vertices[i].m_type)
+            {
+            case VBT_1D:
+                {
+                    std::uint16_t const mul = 1;
+                    m_vertices[i].m_array.m_data.resize(m_vertexCount * mul);
+                    if(!file.read(reinterpret_cast<char*>(m_vertices[i].m_array.m_data.data()),m_vertexCount * mul * sizeof(float)))
+                        return false;
+                }
+                break;
+            case VBT_2D:
+                {
+                    std::uint16_t const mul = 2;
+                    m_vertices[i].m_array.m_data.resize(m_vertexCount * mul);
+                    if(!file.read(reinterpret_cast<char*>(m_vertices[i].m_array.m_data.data()),m_vertexCount * mul * sizeof(float)))
+                        return false;
+                }
+                break;
+            case VBT_3D:
+                {
+                    std::uint16_t const mul = 3;
+                    m_vertices[i].m_array.m_data.resize(m_vertexCount * mul);
+                    if(!file.read(reinterpret_cast<char*>(m_vertices[i].m_array.m_data.data()),m_vertexCount * mul * sizeof(float)))
+                        return false;
+                }
+                break;
+            case VBT_4D:
+                {
+                    std::uint16_t const mul = 4;
+                    m_vertices[i].m_array.m_data.resize(m_vertexCount * mul);
+                    if(!file.read(reinterpret_cast<char*>(m_vertices[i].m_array.m_data.data()),m_vertexCount * mul * sizeof(float)))
+                        return false;
+                }
+                break;
+            default:
+                return false;
+            }
+        }
+        
+        if(m_descriptorType == DT_INDEXED ||
+                m_descriptorType == DT_INDEXED_32)
+        {
+            std::uint32_t m_ixSize = 0;
+            if(!file.read(reinterpret_cast<char*>(&m_ixSize),sizeof(m_ixSize)))
+                return false;
+            
+            if(m_descriptorType == DT_INDEXED)
+            {
+                m_indices16.m_data.resize(m_ixSize);
+                if(!file.read(reinterpret_cast<char*>(m_indices16.m_data.data()),m_ixSize * sizeof(std::uint16_t)))
+                    return false;
+            }
+            else if(m_descriptorType == DT_INDEXED_32)
+            {
+                m_indices32.m_data.resize(m_ixSize);
+                if(!file.read(reinterpret_cast<char*>(m_indices32.m_data.data()),m_ixSize * sizeof(std::uint32_t)))
+                    return false;
+            }
+        }
+        
+        return true;
+    }
+};
+
+bool Object::load(std::string const& path)
+{
+    std::ifstream file;
+    file.open(path,std::ios_base::in|std::ios_base::binary);
+    if(!file)
+        return false;
+    
+    ObjectDescriptor obj;
+    if(!obj.Load(file))
+        return false;
+    
+    switch(obj.m_descriptorType)
+    {
+    case DT_RAW:
+        if(!this->create(obj.m_vertexCount))
+            return false;
+        break;
+    case DT_INDEXED:
+        if(!this->create_indexed(obj.m_vertexCount) ||
+            !this->setindices(obj.m_indices16))
+            return false;
+        break;
+    case DT_INDEXED_32:
+        if(!this->create_indexed(obj.m_vertexCount) ||
+            !this->setindices_32(obj.m_indices32))
+            return false;
+        break;
+    default:
+        return false;
+    }
+    
+    for(int i = 0; i < 16; ++i)
+    {
+        switch(obj.m_vertices[i].m_type)
+        {
+        case VBT_1D:
+            if(!this->set1d(i, obj.m_vertices[i].m_array))
+                return false;
+            break;
+        case VBT_2D:
+            if(!this->set2d(i, obj.m_vertices[i].m_array))
+                return false;
+            break;
+        case VBT_3D:
+            if(!this->set3d(i, obj.m_vertices[i].m_array))
+                return false;
+            break;
+        case VBT_4D:
+            if(!this->set4d(i, obj.m_vertices[i].m_array))
+                return false;
+            break;
+        default:
+            break;
+        }
+    }
+    
+    return true;
+}
 bool Object::create(std::uint32_t vxCount)
 {
     m_data = std::shared_ptr<impl::ObjectData_Base>(new impl::ObjectData_NonIndexed);
@@ -513,7 +742,6 @@ Shader SquareShape::SelectShader() {
 Texture SquareShape::SelectTexture(std::size_t ix) {
     return m_state.texture(ix);
 }
-
 void SquareShape::DrawRaw(float x, float y, float w, float h)
 {
     if(m_shader.shader())
@@ -532,7 +760,6 @@ void SquareShape::DrawRawCentered(float x, float y, float w, float h)
     }
     this->Draw();
 }
-
 void SquareShape::DrawCorrected(int32_t x, int32_t y, int32_t w, int32_t h)
 {
     if(m_shader.shader())
@@ -547,6 +774,35 @@ void SquareShape::DrawCorrected(int32_t x, int32_t y, int32_t w, int32_t h)
                                                         static_cast<float>(h) * invSizeY);
     }
     this->Draw();
+}
+
+// Timer
+Timer::Timer() : m_running(false), m_start(Timer::clock::now()), m_time(m_start) {}
+void Timer::update()
+{
+    if(m_running)
+    {
+        m_time = Timer::clock::now();
+    }
+}
+std::uint64_t Timer::timei() const {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(m_time - m_start).count();
+}
+static float const inv_1000 = static_cast<float>(1.0 / 1000.0);
+float Timer::timef() const {
+    return static_cast<float>(timei()) * inv_1000;
+}
+void Timer::start() {
+    m_running = true;
+}
+void Timer::stop() {
+    m_running = false;
+}
+void Timer::reset() {
+    m_time = m_start = Timer::clock::now();
+}
+bool Timer::running() const {
+    return m_running;
 }
 
 
