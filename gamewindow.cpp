@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <cmath>
 #include "startupwindow.h"
 
 GameWindow::GameWindow(QWindow* parent, GameMode gamemode, StartupWindow* startupWindow) :
