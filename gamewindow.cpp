@@ -1,6 +1,5 @@
 #include "gamewindow.h"
 #include <QCoreApplication>
-#include <QDebug>
 #include <QMessageBox>
 #include <QDir>
 #include <QKeyEvent>
@@ -44,11 +43,21 @@ void GameWindow::printContextInformations()
     qDebug() << qPrintable(glType) << qPrintable(glVersion) << qPrintable(glProfile);
 }
 
+void GameWindow::FatalError(QString const& title, QString const& description)
+{
+    hide();
+    QMessageBox::critical(nullptr,title,description);
+    CloseToStartupWindow();
+}
+
 void GameWindow::initializeGL()
 {
     initializeOpenGLFunctions();
     printContextInformations();
-    registerLuaFunctions();
+    
+    if(!registerLuaFunctions())
+        return;
+
     glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClearDepthf(0.0f);
     if(state.getglobal("startup") != LUA_TFUNCTION)
@@ -97,7 +106,7 @@ void GameWindow::SetRequirePath(std::string const& path)
     state.pop(1);
 }
 
-void GameWindow::registerLuaFunctions()
+bool GameWindow::registerLuaFunctions()
 {
     {
         const luaL_Reg* lib;
@@ -108,11 +117,12 @@ void GameWindow::registerLuaFunctions()
     }
     SetRequireCPath(std::string());
     SetRequirePath(std::string());
-    state.luapp_register_object<LuaApi::Texture>();
-    state.luapp_register_object<LuaApi::Shader>();
-    state.luapp_register_object<LuaApi::Object>();
-    state.luapp_register_object<LuaApi::Timer>();
-    subRegisterLuaFunctions();
+    try {
+        m_link.Init(this,this,state);
+    } catch(std::exception& e) {
+        FatalError(tr("Loading Error"),e.what());
+        return false;
+    }
 
     std::string ApiPath = m_basePath.toStdString() + "/api/";
     std::string GmPath = m_basePath.toStdString() + "/gamemode/" + m_gamemode.SubFolder.toStdString() + "/";
@@ -145,22 +155,18 @@ void GameWindow::registerLuaFunctions()
 
         if(state.loadfile(str.toStdString().c_str()) != 0)
         {
-            hide();
-            QMessageBox::critical(nullptr,tr("Error loading gamemode %1").arg(m_gamemode.Name),tr("Lua Error while opening module file %1.\nLua Error: %2").arg(str).arg(QString::fromStdString(state.tostdstring(1))));
-            CloseToStartupWindow();
-            return;
+            FatalError(tr("Error loading gamemode %1").arg(m_gamemode.Name),tr("Lua Error while opening module file %1.\nLua Error: %2").arg(str).arg(QString::fromStdString(state.tostdstring(1))));
+            return false;
         }
         if(state.pcall() != 0)
         {
-            hide();
-            QMessageBox::critical(nullptr,tr("Error loading gamemode %1").arg(m_gamemode.Name),tr("Lua Error while loading module file %1.\nLua Error: %2").arg(str).arg(QString::fromStdString(state.tostdstring(1))));
-            CloseToStartupWindow();
-            return;
+            FatalError(tr("Error loading gamemode %1").arg(m_gamemode.Name),tr("Lua Error while loading module file %1.\nLua Error: %2").arg(str).arg(QString::fromStdString(state.tostdstring(1))));
+            return false;
         }
     }
     
     SetRequirePath(GamemodeRequirements);
-
+    return true;
 }
 
 void GameWindow::CloseToStartupWindow()

@@ -15,20 +15,25 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = OpenRP
 TEMPLATE = app
+LIBS += -lopenal -lvorbisfile
 
 
 SOURCES += main.cpp\
         startupwindow.cpp \
     gamewindow.cpp \
-    luagl_api.cpp \
-    lua_api.cpp \
-    lua_ogl_link.cpp \
-    lua_ogl_functions.cpp
+    link_enums.cpp \
+    link.cpp \
+    rp_openal.cpp \
+    rp_openal_ogg.cpp \
+    rp_opengl.cpp
 
 HEADERS  += startupwindow.h \
     gamewindow.h \
     gamemode.h \
-    lua_ogl_link.h
+    shared.h \
+    link.h \
+    rp_openal.h \
+    rp_opengl.h
 
 FORMS    += startupwindow.ui
 

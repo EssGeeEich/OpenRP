@@ -1,9 +1,7 @@
 #ifndef LUA_OGL_LINK_H
 #define LUA_OGL_LINK_H
-#include <exception>
-#include <memory>
+#include "shared.h"
 #include <chrono>
-#include <QOpenGLFunctions_4_4_Core>
 #include <QOpenGLBuffer>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLShader>
@@ -12,9 +10,6 @@
 #include <QOpenGLVertexArrayObject>
 #include "state.h"
 #include "library.h"
-
-typedef QOpenGLFunctions_4_4_Core GL_t;
-class GameWindow;
 
 namespace LuaApi {
     typedef Lua::lua_exception gl_error;
@@ -32,6 +27,9 @@ namespace LuaApi {
             std::size_t height() const;
         };
         std::shared_ptr<TexData> m_data;
+    protected:
+        static std::uint32_t FlagToUint(QOpenGLTexture::Filter, bool&);
+        static QOpenGLTexture::Filter UintToFlag(std::uint32_t, bool&);
     public:
         Texture() =default;
         Texture(Texture const&) =default;
@@ -41,9 +39,14 @@ namespace LuaApi {
 
         bool load(std::string const&, Lua::Arg<bool> const&);
         void unload();
-        Lua::ReturnValues<std::size_t, std::size_t> size() const;
+        Lua::ReturnValues size() const;
         QOpenGLTexture* texture() const;
         bool good() const;
+        std::uint32_t magfilter() const;
+        std::uint32_t minfilter() const;
+        float anisotropy() const;
+        void setmagfilter(std::uint32_t);
+        void setminfilter(std::uint32_t);
         void setfilter(std::uint32_t);
         void setanisotropy(float);
     };
@@ -237,14 +240,6 @@ namespace LuaApi {
         void DrawRawCentered(float, float, float, float);
         void DrawCorrected(std::int32_t, std::int32_t, std::int32_t, std::int32_t);
     };
-
-    class Storage {
-        DrawableState m_ds;
-        SquareShape m_square;
-    public:
-        Storage();
-        bool InitAll(GL_t*, GameWindow*, Lua::State&);
-    };
     
     class Timer {
     public:
@@ -268,62 +263,67 @@ namespace LuaApi {
 
 template <> struct MetatableDescriptor<LuaApi::Timer> {
     static char const* name() { return "timer_mt"; }
-    static char const* luaname() { return "timer"; }
-    static char const* constructor() { return "create"; }
+    static char const* luaname() { return "Timer"; }
+    static char const* constructor() { return "New"; }
     static void metatable(Lua::member_function_storage<LuaApi::Timer>& mt) {
-        mt["update"] = Lua::Transform(&LuaApi::Timer::update);
-        mt["timei"] = Lua::Transform(&LuaApi::Timer::timei);
-        mt["timef"] = Lua::Transform(&LuaApi::Timer::timef);
-        mt["start"] = Lua::Transform(&LuaApi::Timer::start);
-        mt["stop"] = Lua::Transform(&LuaApi::Timer::stop);
-        mt["reset"] = Lua::Transform(&LuaApi::Timer::reset);
-        mt["running"] = Lua::Transform(&LuaApi::Timer::running);
+        mt["Reset"] = Lua::Transform(&LuaApi::Timer::reset);
+        mt["Running"] = Lua::Transform(&LuaApi::Timer::running);
+        mt["Start"] = Lua::Transform(&LuaApi::Timer::start);
+        mt["Stop"] = Lua::Transform(&LuaApi::Timer::stop);
+        mt["TimeI"] = Lua::Transform(&LuaApi::Timer::timei);
+        mt["TimeF"] = Lua::Transform(&LuaApi::Timer::timef);
+        mt["Update"] = Lua::Transform(&LuaApi::Timer::update);
     }
 };
 template <> struct MetatableDescriptor<LuaApi::Texture> {
     static char const* name() { return "texture_mt"; }
-    static char const* luaname() { return "texture"; }
-    static char const* constructor() { return "create"; }
+    static char const* luaname() { return "Texture"; }
+    static char const* constructor() { return "New"; }
     static void metatable(Lua::member_function_storage<LuaApi::Texture>& mt) {
-        mt["load"] = Lua::Transform(&LuaApi::Texture::load);
-        mt["unload"] = Lua::Transform(&LuaApi::Texture::unload);
-        mt["size"] = Lua::Transform(&LuaApi::Texture::size);
-        mt["good"] = Lua::Transform(&LuaApi::Texture::good);
-        mt["setfilter"] = Lua::Transform(&LuaApi::Texture::setfilter);
-        mt["setanisotropy"] = Lua::Transform(&LuaApi::Texture::setanisotropy);
+        mt["Anisotropy"] = Lua::Transform(&LuaApi::Texture::anisotropy);
+        mt["Good"] = Lua::Transform(&LuaApi::Texture::good);
+        mt["LoadFile"] = Lua::Transform(&LuaApi::Texture::load);
+        mt["MagFilter"] = Lua::Transform(&LuaApi::Texture::magfilter);
+        mt["MinFilter"] = Lua::Transform(&LuaApi::Texture::minfilter);
+        mt["SetAnisotropy"] = Lua::Transform(&LuaApi::Texture::setanisotropy);
+        mt["SetFilter"] = Lua::Transform(&LuaApi::Texture::setfilter);
+        mt["SetMagFilter"] = Lua::Transform(&LuaApi::Texture::setmagfilter);
+        mt["SetMinFilter"] = Lua::Transform(&LuaApi::Texture::setminfilter);
+        mt["Size"] = Lua::Transform(&LuaApi::Texture::size);
+        mt["Unload"] = Lua::Transform(&LuaApi::Texture::unload);
     }
 };
 template <> struct MetatableDescriptor<LuaApi::Shader> {
     static char const* name() { return "shader_mt"; }
-    static char const* luaname() { return "shader"; }
-    static char const* constructor() { return "create"; }
+    static char const* luaname() { return "Shader"; }
+    static char const* constructor() { return "New"; }
     static void metatable(Lua::member_function_storage<LuaApi::Shader>& mt) {
-        mt["load"] = Lua::Transform(&LuaApi::Shader::load);
-        mt["loadfromfile"] = Lua::Transform(&LuaApi::Shader::loadfromfile);
-        mt["unload"] = Lua::Transform(&LuaApi::Shader::unload);
-        mt["good"] = Lua::Transform(&LuaApi::Shader::good);
+        mt["Load"] = Lua::Transform(&LuaApi::Shader::load);
+        mt["LoadFile"] = Lua::Transform(&LuaApi::Shader::loadfromfile);
+        mt["Good"] = Lua::Transform(&LuaApi::Shader::good);
+        mt["Unload"] = Lua::Transform(&LuaApi::Shader::unload);
     }
 };
 
 template <> struct MetatableDescriptor<LuaApi::Object> {
     static char const* name() { return "object_mt"; }
-    static char const* luaname() { return "object"; }
-    static char const* constructor() { return "create"; }
+    static char const* luaname() { return "Object"; }
+    static char const* constructor() { return "New"; }
     static void metatable(Lua::member_function_storage<LuaApi::Object>& mt) {
-        mt["create"] = Lua::Transform(&LuaApi::Object::create);
-        mt["create_indexed"] = Lua::Transform(&LuaApi::Object::create_indexed);
-        mt["setindices"] = Lua::Transform(&LuaApi::Object::setindices);
-        mt["setindices_32"] = Lua::Transform(&LuaApi::Object::setindices_32);
-        mt["set1d"] = Lua::Transform(&LuaApi::Object::set1d);
-        mt["set2d"] = Lua::Transform(&LuaApi::Object::set2d);
-        mt["set3d"] = Lua::Transform(&LuaApi::Object::set3d);
-        mt["set4d"] = Lua::Transform(&LuaApi::Object::set4d);
-        mt["lock"] = Lua::Transform(&LuaApi::Object::lock);
-        mt["link"] = mt["lock"];
-        mt["bind"] = Lua::Transform(&LuaApi::Object::bind);
-        mt["draw"] = Lua::Transform(&LuaApi::Object::draw);
-        mt["unload"] = Lua::Transform(&LuaApi::Object::unload);
-        mt["good"] = Lua::Transform(&LuaApi::Object::good);
+        mt["Bind"] = Lua::Transform(&LuaApi::Object::bind);
+        mt["Create"] = Lua::Transform(&LuaApi::Object::create);
+        mt["CreateIndexed"] = Lua::Transform(&LuaApi::Object::create_indexed);
+        mt["Draw"] = Lua::Transform(&LuaApi::Object::draw);
+        mt["Good"] = Lua::Transform(&LuaApi::Object::good);
+        mt["LoadFile"] = Lua::Transform(&LuaApi::Object::load);
+        mt["Lock"] = mt["Link"] = Lua::Transform(&LuaApi::Object::lock);
+        mt["Set1D"] = Lua::Transform(&LuaApi::Object::set1d);
+        mt["Set2D"] = Lua::Transform(&LuaApi::Object::set2d);
+        mt["Set3D"] = Lua::Transform(&LuaApi::Object::set3d);
+        mt["Set4D"] = Lua::Transform(&LuaApi::Object::set4d);
+        mt["SetIndices"] = Lua::Transform(&LuaApi::Object::setindices);
+        mt["SetIndices32"] = Lua::Transform(&LuaApi::Object::setindices_32);
+        mt["Unload"] = Lua::Transform(&LuaApi::Object::unload);
     }
 };
 

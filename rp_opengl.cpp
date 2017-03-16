@@ -1,4 +1,4 @@
-#include "lua_ogl_link.h"
+#include "rp_opengl.h"
 #include "gamewindow.h"
 #include <QOpenGLFunctions>
 #include <fstream>
@@ -43,7 +43,7 @@ void Texture::unload()
 {
     m_data.reset();
 }
-Lua::ReturnValues<std::size_t, std::size_t> Texture::size() const
+Lua::ReturnValues Texture::size() const
 {
     if(m_data)
         return Lua::Return(m_data->width(), m_data->height());
@@ -59,41 +59,103 @@ bool Texture::good() const
 {
     return m_data.get() != nullptr;
 }
+std::uint32_t Texture::FlagToUint(QOpenGLTexture::Filter f, bool& r)
+{
+    switch(f)
+    {
+    case QOpenGLTexture::Nearest:
+    case QOpenGLTexture::NearestMipMapLinear:
+    case QOpenGLTexture::NearestMipMapNearest:
+    case QOpenGLTexture::Linear:
+    case QOpenGLTexture::LinearMipMapLinear:
+    case QOpenGLTexture::LinearMipMapNearest:
+        r = true;
+        return static_cast<std::uint32_t>(f);
+    default:
+        r = false;
+        return 0;
+    }
+}
+QOpenGLTexture::Filter Texture::UintToFlag(std::uint32_t f, bool& r)
+{
+    switch(f)
+    {
+    case GL_NEAREST:
+    case GL_NEAREST_MIPMAP_LINEAR:
+    case GL_NEAREST_MIPMAP_NEAREST:
+    case GL_LINEAR:
+    case GL_LINEAR_MIPMAP_LINEAR:
+    case GL_LINEAR_MIPMAP_NEAREST:
+        r = true;
+        return static_cast<QOpenGLTexture::Filter>(f);
+    default:
+        r = false;
+        return static_cast<QOpenGLTexture::Filter>(-1);
+    }
+}
+
 void Texture::setfilter(std::uint32_t flag) {
     if(m_data)
     {
-        QOpenGLTexture::Filter f;
-        switch(flag)
-        {
-        case GL_NEAREST:
-            f = QOpenGLTexture::Nearest;
-            break;
-        case GL_NEAREST_MIPMAP_LINEAR:
-            f = QOpenGLTexture::NearestMipMapLinear;
-            break;
-        case GL_NEAREST_MIPMAP_NEAREST:
-            f = QOpenGLTexture::NearestMipMapNearest;
-            break;
-        case GL_LINEAR:
-            f = QOpenGLTexture::Linear;
-            break;
-        case GL_LINEAR_MIPMAP_LINEAR:
-            f = QOpenGLTexture::LinearMipMapLinear;
-            break;
-        case GL_LINEAR_MIPMAP_NEAREST:
-            f = QOpenGLTexture::LinearMipMapNearest;
-            break;
-        default:
+        bool r = false;
+        QOpenGLTexture::Filter f = Texture::UintToFlag(flag,r);
+        if(!r)
             return;
-        }
 
         m_data->texture().setMinificationFilter(f);
         m_data->texture().setMagnificationFilter(f);
     }
 }
+void Texture::setmagfilter(std::uint32_t flag) {
+    if(m_data)
+    {
+        bool r = false;
+        QOpenGLTexture::Filter f = Texture::UintToFlag(flag,r);
+        if(!r)
+            return;
+
+        m_data->texture().setMagnificationFilter(f);
+    }
+}
+std::uint32_t Texture::magfilter() const {
+    if(m_data)
+    {
+        bool r = false;
+        std::uint32_t v = Texture::FlagToUint(m_data->texture().magnificationFilter(),r);
+        if(r)
+            return v;
+    }
+    return 0;
+}
+void Texture::setminfilter(std::uint32_t flag) {
+    if(m_data)
+    {
+        bool r = false;
+        QOpenGLTexture::Filter f = Texture::UintToFlag(flag,r);
+        if(!r)
+            return;
+
+        m_data->texture().setMinificationFilter(f);
+    }
+}
+std::uint32_t Texture::minfilter() const {
+    if(m_data)
+    {
+        bool r = false;
+        std::uint32_t v = Texture::FlagToUint(m_data->texture().minificationFilter(),r);
+        if(r)
+            return v;
+    }
+    return 0;
+}
 void Texture::setanisotropy(float max) {
     if(m_data)
         m_data->texture().setMaximumAnisotropy(max);
+}
+float Texture::anisotropy() const {
+    if(m_data)
+        return m_data->texture().maximumAnisotropy();
+    return 0.f;
 }
 
 // Shader

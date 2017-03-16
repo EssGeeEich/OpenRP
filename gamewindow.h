@@ -2,9 +2,12 @@
 #define GAMEWINDOW_H
 
 #include <QOpenGLWindow>
-#include "lua_ogl_link.h"
+#include "shared.h"
+#include "rp_openal.h"
+#include "rp_opengl.h"
 #include "state.h"
 #include "gamemode.h"
+#include "link.h"
 
 class StartupWindow;
 
@@ -38,23 +41,23 @@ protected:
     void wheelEvent(QWheelEvent *) override;
 
     void printContextInformations();
-    void registerLuaFunctions();
+    bool registerLuaFunctions();
 
     void CloseToStartupWindow();
     void CloseToDesktop();
     void SetRequireCPath(std::string const&);
     void SetRequirePath(std::string const&);
     
+    void FatalError(QString const& title, QString const& description);
+    
 private:
     bool preCallLuaFunction(char const*);
     bool callLuaFunction(char const*, int =0);
-    void subRegisterLuaFunctions();
-    void glToLua();
     Lua::State state;
 
     GameMode m_gamemode;
     StartupWindow* m_startupWindow;
-    LuaApi::Storage m_storage;
+    LuaApi::Link m_link;
     QString m_basePath;
 };
 

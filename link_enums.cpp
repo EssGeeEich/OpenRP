@@ -1,13 +1,14 @@
-#include "gamewindow.h"
+#include "link.h"
 
-void GameWindow::subRegisterLuaFunctions()
+namespace LuaApi {
+
+void Link::registerEnums(Lua::State& state)
 {
-    glToLua();
-
+    (void)state;
+    
 #define INTABLE(count) state.createtable(0,count)
 #define ENDTABLE(name) state.setglobal(name)
 #define ADDVAR(name, value) state.pushinteger(value); state.setfield(-2, name)
-//#define ADDVAR(name, value) state.pushinteger(value); state.setglobal(name)
     
     // KeyMod.Shift
     INTABLE(5);
@@ -1846,4 +1847,6 @@ void GameWindow::subRegisterLuaFunctions()
     ADDVAR("XOR",0x1506);
     ADDVAR("ZERO",0);
     ENDTABLE("GL");
+}
+
 }
