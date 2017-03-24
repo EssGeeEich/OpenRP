@@ -2,14 +2,12 @@
 #define LINK_H
 #include "shared.h"
 #include "state.h"
-#include "rp_opengl.h"
-#include "rp_openal.h"
+#include "gl/all.h"
+#include "al/all.h"
 
 namespace LuaApi {
 
 class Link {
-    DrawableState m_drawState;
-    SquareShape m_square;
     DeviceList m_deviceList;
 public:
     Link();

@@ -11,6 +11,8 @@
 #define REG_CONSTF(var) { state.pushnumber(var); state.setglobal( #var ); }
 #define REG_NAMED_GL_FUNC(name, var) state.luapp_add_translated_function( #var, Lua::Transform(*gl, &GL_t::name ))
 #define REG_GL_FUNC(name) state.luapp_add_translated_function( #name, Lua::Transform(*gl, &GL_t::name ))
+#define REG_NAMED_AL_FUNC(name, var) state.luapp_add_translated_function( #var, Lua::Transform(&SoundContextProperties::name))
+#define REG_AL_FUNC(name) state.luapp_add_translated_function( #name, Lua::Transform(&SoundContextProperties::name))
 
 namespace LuaApi {
 
@@ -31,54 +33,76 @@ namespace impl {
     }
 }
 
-Link::Link() : m_square(m_drawState) {}
+Link::Link() {}
 
 bool Link::Init(GL_t* gl, GameWindow* gw, Lua::State& state)
 {
     registerEnums(state);
+    
+    // GL
+    state.luapp_register_object<LuaApi::ObjectMaterial>();
     state.luapp_register_object<LuaApi::Texture>();
     state.luapp_register_object<LuaApi::Shader>();
+    state.luapp_register_object<LuaApi::Model>();
+    state.luapp_register_object<LuaApi::ObjectBone>();
     state.luapp_register_object<LuaApi::Object>();
+    
+    // Misc
     state.luapp_register_object<LuaApi::Timer>();
+    
+    // AL
     state.luapp_register_object<LuaApi::DeviceList>();
     state.luapp_register_object<LuaApi::Device>();
     state.luapp_register_object<LuaApi::Context>();
-    state.luapp_register_object<LuaApi::SoundEmitterBase>();
-    
+    state.luapp_register_object<LuaApi::SoundEmitter>();
     state.luapp_push_object<LuaApi::DeviceList>();
     state.setglobal("Audio");
-    
-    {
-        Texture fallback;
-        if(!fallback.load(":/textures/error.png",Lua::Arg<bool>::ToCopy(false)))
-            return false;
-        fallback.texture()->setMagnificationFilter(QOpenGLTexture::Nearest);
-        fallback.texture()->setMinificationFilter(QOpenGLTexture::Nearest);
-        m_drawState.SetFallbackTexture(fallback);
-    }
-    
-    if(!m_square.Initialize(gl,gw))
-        return false;
         
     // Custom Functions
     REG_NAMED_FUNC(TimeI, impl::timei);
     REG_NAMED_FUNC(TimeF, impl::timef);
     REG_NAMED_MEM_FUNC(Data, *gw, GameWindow, DataPath);
     
-    // Render Functions
-    REG_MEM_FUNC(m_square, SquareShape, DrawRaw);
-    REG_MEM_FUNC(m_square, SquareShape, DrawRawCentered);
-    REG_MEM_FUNC(m_square, SquareShape, DrawCorrected);
-    REG_MEM_FUNC(m_drawState, DrawableState, SetTexture);
-    
     // OpenGL Functions
     REG_GL_FUNC(glEnable);
+    REG_GL_FUNC(glEnablei);
     REG_GL_FUNC(glDisable);
+    REG_GL_FUNC(glDisablei);
+    REG_GL_FUNC(glIsEnabled);
+    REG_GL_FUNC(glIsEnabledi);
+    REG_GL_FUNC(glLineWidth);
     REG_GL_FUNC(glDepthFunc);
     REG_GL_FUNC(glClearColor);
+    REG_GL_FUNC(glClearDepth);
+    REG_GL_FUNC(glClearDepthf);
+    REG_GL_FUNC(glClearStencil);
+    REG_GL_FUNC(glCullFace);
+    REG_GL_FUNC(glDepthMask);
     REG_GL_FUNC(glClear);
+    REG_GL_FUNC(glViewport);
+    REG_GL_FUNC(glDepthRange);
+    REG_GL_FUNC(glDepthRangef);
+    REG_GL_FUNC(glFlush);
+    REG_GL_FUNC(glFinish);
+    REG_GL_FUNC(glFrontFace);
+    REG_GL_FUNC(glHint);
     
     // OpenAL Functions
+    REG_NAMED_AL_FUNC(queryDopplerFactor, DopplerFactor);
+    REG_NAMED_AL_FUNC(querySoundSpeed, SoundSpeed);
+    REG_NAMED_AL_FUNC(queryDistanceModel, DistanceModel);
+    REG_NAMED_AL_FUNC(setDopplerFactor, SetDopplerFactor);
+    REG_NAMED_AL_FUNC(setSoundSpeed, SetSoundSpeed);
+    REG_NAMED_AL_FUNC(setDistanceModel, SetDistanceModel);
+    
+    REG_NAMED_AL_FUNC(queryListenerGain, ListenerGain);
+    REG_NAMED_AL_FUNC(luaQueryListenerPosition, ListenerPosition);
+    REG_NAMED_AL_FUNC(luaQueryListenerVelocity, ListenerVelocity);
+    REG_NAMED_AL_FUNC(luaQueryListenerOrientation, ListenerOrientation);
+    REG_NAMED_AL_FUNC(setListenerGain, SetListenerGain);
+    REG_NAMED_AL_FUNC(setListenerPosition, SetListenerPosition);
+    REG_NAMED_AL_FUNC(setListenerVelocity, SetListenerVelocity);
+    REG_NAMED_AL_FUNC(setListenerOrientation, SetListenerOrientation);
        
     return true;
 }

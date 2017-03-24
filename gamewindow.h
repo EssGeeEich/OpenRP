@@ -3,8 +3,8 @@
 
 #include <QOpenGLWindow>
 #include "shared.h"
-#include "rp_openal.h"
-#include "rp_opengl.h"
+#include "al/all.h"
+#include "gl/all.h"
 #include "state.h"
 #include "gamemode.h"
 #include "link.h"

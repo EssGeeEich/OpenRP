@@ -15,25 +15,52 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = OpenRP
 TEMPLATE = app
-LIBS += -lopenal -lvorbisfile
+LIBS += -lopenal -lvorbisfile -lassimp
 
 
 SOURCES += main.cpp\
         startupwindow.cpp \
     gamewindow.cpp \
+    gl/drawable.cpp \
+    gl/material.cpp \
+    gl/misc.cpp \
+    gl/model.cpp \
+    gl/object.cpp \
+    gl/objectbone.cpp \
+    gl/shader.cpp \
+    gl/texture.cpp \
+    al/context.cpp \
+    al/device.cpp \
+    al/devicelist.cpp \
+    al/emitter.cpp \
+    al/loader.cpp \
     link_enums.cpp \
-    link.cpp \
-    rp_openal.cpp \
-    rp_openal_ogg.cpp \
-    rp_opengl.cpp
+    link.cpp
 
 HEADERS  += startupwindow.h \
     gamewindow.h \
     gamemode.h \
     shared.h \
     link.h \
-    rp_openal.h \
-    rp_opengl.h
+    gl/all.h \
+    gl/drawable.h \
+    gl/material.h \
+    gl/misc.h \
+    gl/model.h \
+    gl/object.h \
+    gl/objectbone.h \
+    gl/shader.h \
+    gl/shared.h \
+    gl/texture.h \
+    al/all.h \
+    al/context.h \
+    al/device.h \
+    al/devicelist.h \
+    al/emitter.h \
+    al/enums.h \
+    al/loader.h \
+    al/shared.h \
+    gl/camera.h
 
 FORMS    += startupwindow.ui
 
