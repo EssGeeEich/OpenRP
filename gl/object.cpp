@@ -6,7 +6,7 @@
 
 namespace LuaApi {
 	
-// Object
+// Model
 struct MatInfo {
     aiColor3D diffuse;
     aiColor3D specular;
@@ -37,7 +37,7 @@ GLenum TextureWrapToGL(aiTextureMapMode tmm)
     }
 }
 
-bool ObjectImpl::load(std::string const& path)
+bool ModelImpl::load(std::string const& path)
 {
     // Attribute 0: Position
     // Attribute 1: Normal
@@ -96,10 +96,10 @@ bool ObjectImpl::load(std::string const& path)
         aiMesh* mesh = scene->mMeshes[i];
         
         m_bones.emplace_back();
-        ObjectBone& objectBone = m_bones.back();
+        ModelBone& objectBone = m_bones.back();
         objectBone.Init();
         
-        Model& currentModel = objectBone->m_model;
+        ModelStorage& currentModel = objectBone->m_model;
         currentModel.Init();
         if(!currentModel->create_indexed(mesh->mNumVertices))
             return false;
@@ -372,7 +372,7 @@ bool ObjectImpl::load(std::string const& path)
     for(std::size_t i = 0; i < scene->mNumMeshes; ++i)
     {
         aiMesh* mesh = scene->mMeshes[i];
-        ObjectBone& bone = m_bones[i];
+        ModelBone& bone = m_bones[i];
         if(mesh->mMaterialIndex < materials.size())
         {
             MatInfo& mat = materials[mesh->mMaterialIndex];
@@ -420,10 +420,10 @@ bool ObjectImpl::load(std::string const& path)
     return true;
 }
 
-std::size_t ObjectImpl::BoneCount() const {
+std::size_t ModelImpl::BoneCount() const {
     return m_bones.size();
 }
-Lua::ReturnValues ObjectImpl::GetBoneByName(std::string const& name) {
+Lua::ReturnValues ModelImpl::GetBoneByName(std::string const& name) {
     for(std::size_t i = 0; i < m_bones.size(); ++i)
     {
         if(m_bones[i]->Name() == name)
@@ -431,7 +431,7 @@ Lua::ReturnValues ObjectImpl::GetBoneByName(std::string const& name) {
     }
     return Lua::Return();
 }
-Lua::ReturnValues ObjectImpl::GetBoneByNumber(std::size_t i) {
+Lua::ReturnValues ModelImpl::GetBoneByNumber(std::size_t i) {
     if(i < m_bones.size())
         return Lua::Return(m_bones[i]);
     return Lua::Return();

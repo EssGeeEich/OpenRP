@@ -59,8 +59,7 @@ HEADERS  += startupwindow.h \
     al/emitter.h \
     al/enums.h \
     al/loader.h \
-    al/shared.h \
-    gl/camera.h
+    al/shared.h
 
 FORMS    += startupwindow.ui
 

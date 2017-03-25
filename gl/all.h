@@ -2,6 +2,7 @@
 #define LUAGL_ALL_H
 
 #include "shared.h"
+#include "camera.h"
 #include "material.h"
 #include "texture.h"
 #include "shader.h"

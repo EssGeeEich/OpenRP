@@ -14,6 +14,8 @@
 #define REG_NAMED_AL_FUNC(name, var) state.luapp_add_translated_function( #var, Lua::Transform(&SoundContextProperties::name))
 #define REG_AL_FUNC(name) state.luapp_add_translated_function( #name, Lua::Transform(&SoundContextProperties::name))
 
+#define REG_EXPL_FUNC(name, var, arg) state.luapp_add_translated_function( #name, Lua::Transform(&var, arg))
+
 namespace LuaApi {
 
 namespace impl {
@@ -35,6 +37,19 @@ namespace impl {
 
 Link::Link() {}
 
+bool xglIsEnabled(GL_t* gl, GLenum n)
+{
+    return gl->glIsEnabled(n) != 0;
+}
+bool xglIsEnabledi(GL_t* gl, GLenum n, int i)
+{
+    return gl->glIsEnabledi(n,i) != 0;
+}
+void xglDepthMask(GL_t* gl, bool v)
+{
+    gl->glDepthMask(v ? 1 : 0);
+}
+
 bool Link::Init(GL_t* gl, GameWindow* gw, Lua::State& state)
 {
     registerEnums(state);
@@ -43,9 +58,9 @@ bool Link::Init(GL_t* gl, GameWindow* gw, Lua::State& state)
     state.luapp_register_object<LuaApi::ObjectMaterial>();
     state.luapp_register_object<LuaApi::Texture>();
     state.luapp_register_object<LuaApi::Shader>();
+    state.luapp_register_object<LuaApi::ModelStorage>();
+    state.luapp_register_object<LuaApi::ModelBone>();
     state.luapp_register_object<LuaApi::Model>();
-    state.luapp_register_object<LuaApi::ObjectBone>();
-    state.luapp_register_object<LuaApi::Object>();
     
     // Misc
     state.luapp_register_object<LuaApi::Timer>();
@@ -68,8 +83,6 @@ bool Link::Init(GL_t* gl, GameWindow* gw, Lua::State& state)
     REG_GL_FUNC(glEnablei);
     REG_GL_FUNC(glDisable);
     REG_GL_FUNC(glDisablei);
-    REG_GL_FUNC(glIsEnabled);
-    REG_GL_FUNC(glIsEnabledi);
     REG_GL_FUNC(glLineWidth);
     REG_GL_FUNC(glDepthFunc);
     REG_GL_FUNC(glClearColor);
@@ -77,7 +90,6 @@ bool Link::Init(GL_t* gl, GameWindow* gw, Lua::State& state)
     REG_GL_FUNC(glClearDepthf);
     REG_GL_FUNC(glClearStencil);
     REG_GL_FUNC(glCullFace);
-    REG_GL_FUNC(glDepthMask);
     REG_GL_FUNC(glClear);
     REG_GL_FUNC(glViewport);
     REG_GL_FUNC(glDepthRange);
@@ -86,6 +98,9 @@ bool Link::Init(GL_t* gl, GameWindow* gw, Lua::State& state)
     REG_GL_FUNC(glFinish);
     REG_GL_FUNC(glFrontFace);
     REG_GL_FUNC(glHint);
+    REG_EXPL_FUNC(glIsEnabled, xglIsEnabled, gl);
+    REG_EXPL_FUNC(glIsEnabledi, xglIsEnabledi, gl);
+    REG_EXPL_FUNC(glDepthMask, xglDepthMask, gl);
     
     // OpenAL Functions
     REG_NAMED_AL_FUNC(queryDopplerFactor, DopplerFactor);

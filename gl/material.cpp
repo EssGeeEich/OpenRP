@@ -4,19 +4,6 @@ namespace LuaApi {
 
 void ObjectMaterialImpl::UpdateUBO()
 {
-    unsigned char m_data[
-        /*
-        4 - m_diffuse
-        4 - m_specular
-        4 - m_ambient
-        4 - m_emissive
-        4 - m_opacity m_shininess m_shininessStrength
-        4 - DiffuseUV, Specular UV
-        4 - 
-        
-        */
-            
-    ];
 }
 
 ObjectMaterialImpl::ObjectMaterialImpl()

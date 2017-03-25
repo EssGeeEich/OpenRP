@@ -2,10 +2,10 @@
 #define LUAGL_MODEL_H
 #include "shared.h"
 namespace LuaApi {
-	class ModelImpl;
+	class ModelStorageImpl;
     namespace impl {
         class SharedBuffer {
-            friend class ::LuaApi::ModelImpl;
+            friend class ::LuaApi::ModelStorageImpl;
         protected:
             std::shared_ptr<QOpenGLBuffer> m_buffer;
             std::uint32_t m_tupleSize;
@@ -24,7 +24,7 @@ namespace LuaApi {
         };
 
         class ModelData_Base {
-            friend class ::LuaApi::ModelImpl;
+            friend class ::LuaApi::ModelStorageImpl;
         protected:
             QOpenGLVertexArrayObject m_vao;
             SharedBuffer m_vbo[16];
@@ -45,14 +45,14 @@ namespace LuaApi {
         };
         
         class ModelData_NonIndexed : public ModelData_Base {
-            friend class ::LuaApi::ModelImpl;
+            friend class ::LuaApi::ModelStorageImpl;
         public:
             virtual ~ModelData_NonIndexed();
             virtual void Apply() override;
         };
         
         class ModelData_Indexed : public ModelData_Base {
-            friend class ::LuaApi::ModelImpl;
+            friend class ::LuaApi::ModelStorageImpl;
             QOpenGLBuffer m_ibo;
             bool m_32bit;
             std::uint32_t m_indices;
@@ -71,7 +71,7 @@ namespace LuaApi {
         };
     }
     
-    class ModelImpl {
+    class ModelStorageImpl {
         std::unique_ptr<impl::ModelData_Base> m_data;
     public:
         bool create(std::uint32_t);
@@ -90,28 +90,28 @@ namespace LuaApi {
         bool good() const;
     };
     
-    typedef RefCounted<ModelImpl> Model;
+    typedef RefCounted<ModelStorageImpl> ModelStorage;
 }
 
-template <> struct MetatableDescriptor<LuaApi::ModelImpl> {
+template <> struct MetatableDescriptor<LuaApi::ModelStorageImpl> {
     static char const* name() { return "model_mt"; }
-    static char const* luaname() { return "Model"; }
+    static char const* luaname() { return "ModelStorage"; }
     static char const* constructor() { return "New"; }
-    static bool construct(LuaApi::ModelImpl* v) { return Lua::DefaultConstructor(v); }
-    static void metatable(Lua::member_function_storage<LuaApi::ModelImpl>& mt) {
-        mt["Bind"] = Lua::Transform(&LuaApi::ModelImpl::bind);
-        mt["Create"] = Lua::Transform(&LuaApi::ModelImpl::create);
-        mt["CreateIndexed"] = Lua::Transform(&LuaApi::ModelImpl::create_indexed);
-        mt["Draw"] = Lua::Transform(&LuaApi::ModelImpl::draw);
-        mt["IsValid"] = Lua::Transform(&LuaApi::ModelImpl::good);
-        mt["Lock"] = mt["Link"] = Lua::Transform(&LuaApi::ModelImpl::lock);
-        mt["Set1D"] = Lua::Transform(&LuaApi::ModelImpl::set1d);
-        mt["Set2D"] = Lua::Transform(&LuaApi::ModelImpl::set2d);
-        mt["Set3D"] = Lua::Transform(&LuaApi::ModelImpl::set3d);
-        mt["Set4D"] = Lua::Transform(&LuaApi::ModelImpl::set4d);
-        mt["SetIndices"] = Lua::Transform(&LuaApi::ModelImpl::setindices);
-        mt["SetIndices32"] = Lua::Transform(&LuaApi::ModelImpl::setindices_32);
-        mt["Unload"] = Lua::Transform(&LuaApi::ModelImpl::unload);
+    static bool construct(LuaApi::ModelStorageImpl* v) { return Lua::DefaultConstructor(v); }
+    static void metatable(Lua::member_function_storage<LuaApi::ModelStorageImpl>& mt) {
+        mt["Bind"] = Lua::Transform(&LuaApi::ModelStorageImpl::bind);
+        mt["Create"] = Lua::Transform(&LuaApi::ModelStorageImpl::create);
+        mt["CreateIndexed"] = Lua::Transform(&LuaApi::ModelStorageImpl::create_indexed);
+        mt["Draw"] = Lua::Transform(&LuaApi::ModelStorageImpl::draw);
+        mt["IsValid"] = Lua::Transform(&LuaApi::ModelStorageImpl::good);
+        mt["Lock"] = mt["Link"] = Lua::Transform(&LuaApi::ModelStorageImpl::lock);
+        mt["Set1D"] = Lua::Transform(&LuaApi::ModelStorageImpl::set1d);
+        mt["Set2D"] = Lua::Transform(&LuaApi::ModelStorageImpl::set2d);
+        mt["Set3D"] = Lua::Transform(&LuaApi::ModelStorageImpl::set3d);
+        mt["Set4D"] = Lua::Transform(&LuaApi::ModelStorageImpl::set4d);
+        mt["SetIndices"] = Lua::Transform(&LuaApi::ModelStorageImpl::setindices);
+        mt["SetIndices32"] = Lua::Transform(&LuaApi::ModelStorageImpl::setindices_32);
+        mt["Unload"] = Lua::Transform(&LuaApi::ModelStorageImpl::unload);
     }
 };
 #endif

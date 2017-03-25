@@ -4,7 +4,7 @@
 
 namespace LuaApi {
 	
-// ModelImpl::impl...
+// ModelStorageImpl::impl...
 namespace impl {
 
 // ...SharedBuffer
@@ -51,8 +51,8 @@ bool ModelData_Indexed::is32bit() const { return m_32bit; }
 std::uint32_t ModelData_Indexed::indices() const { return m_indices; }
 }
 
-// ModelImpl
-bool ModelImpl::create(std::uint32_t vxCount)
+// ModelStorageImpl
+bool ModelStorageImpl::create(std::uint32_t vxCount)
 {
     m_data = std::unique_ptr<impl::ModelData_Base>(new impl::ModelData_NonIndexed);
     if(!m_data->Create())
@@ -63,7 +63,7 @@ bool ModelImpl::create(std::uint32_t vxCount)
     m_data->setVertices(vxCount);
     return true;
 }
-bool ModelImpl::create_indexed(std::uint32_t vxCount)
+bool ModelStorageImpl::create_indexed(std::uint32_t vxCount)
 {
     m_data = std::unique_ptr<impl::ModelData_Base>(new impl::ModelData_Indexed);
     if(!m_data->Create())
@@ -74,7 +74,7 @@ bool ModelImpl::create_indexed(std::uint32_t vxCount)
     m_data->setVertices(vxCount);
     return true;
 }
-bool ModelImpl::setindices(const Lua::Array<std::uint16_t>& indices)
+bool ModelStorageImpl::setindices(const Lua::Array<std::uint16_t>& indices)
 {
     if(!m_data || !m_data->IBO())
         return false;
@@ -88,7 +88,7 @@ bool ModelImpl::setindices(const Lua::Array<std::uint16_t>& indices)
     static_cast<impl::ModelData_Indexed*>(m_data.get())->setIndices(indices.m_data.size());
     return true;
 }
-bool ModelImpl::setindices_32(const Lua::Array<std::uint32_t>& indices)
+bool ModelStorageImpl::setindices_32(const Lua::Array<std::uint32_t>& indices)
 {
     if(!m_data || !m_data->IBO())
         return false;
@@ -102,7 +102,7 @@ bool ModelImpl::setindices_32(const Lua::Array<std::uint32_t>& indices)
     static_cast<impl::ModelData_Indexed*>(m_data.get())->setIndices(indices.m_data.size());
     return true;
 }
-bool ModelImpl::set1d(std::size_t attrib, const Lua::Array<float>& data)
+bool ModelStorageImpl::set1d(std::size_t attrib, const Lua::Array<float>& data)
 {
     if(!m_data)
         return false;
@@ -124,7 +124,7 @@ bool ModelImpl::set1d(std::size_t attrib, const Lua::Array<float>& data)
     buf->buffer()->release();
     return true;
 }
-bool ModelImpl::set2d(std::size_t attrib, const Lua::Array<float>& data)
+bool ModelStorageImpl::set2d(std::size_t attrib, const Lua::Array<float>& data)
 {
     if(!m_data)
         return false;
@@ -146,7 +146,7 @@ bool ModelImpl::set2d(std::size_t attrib, const Lua::Array<float>& data)
     buf->buffer()->release();
     return true;
 }
-bool ModelImpl::set3d(std::size_t attrib, const Lua::Array<float>& data)
+bool ModelStorageImpl::set3d(std::size_t attrib, const Lua::Array<float>& data)
 {
     if(!m_data)
         return false;
@@ -168,7 +168,7 @@ bool ModelImpl::set3d(std::size_t attrib, const Lua::Array<float>& data)
     buf->buffer()->release();
     return true;
 }
-bool ModelImpl::set4d(std::size_t attrib, const Lua::Array<float>& data)
+bool ModelStorageImpl::set4d(std::size_t attrib, const Lua::Array<float>& data)
 {
     if(!m_data)
         return false;
@@ -190,7 +190,7 @@ bool ModelImpl::set4d(std::size_t attrib, const Lua::Array<float>& data)
     buf->buffer()->release();
     return true;
 }
-bool ModelImpl::lock()
+bool ModelStorageImpl::lock()
 {
     QOpenGLContext* context = QOpenGLContext::currentContext();
     if(!m_data || !context)
@@ -224,11 +224,11 @@ bool ModelImpl::lock()
     m_data->VAO().release();
     return true;
 }
-void ModelImpl::bind()
+void ModelStorageImpl::bind()
 {
     m_data->Apply();
 }
-void ModelImpl::draw()
+void ModelStorageImpl::draw()
 {
     QOpenGLContext* context = QOpenGLContext::currentContext();
     if(!m_data || !context)
@@ -247,8 +247,8 @@ void ModelImpl::draw()
         f->glDrawArrays(GL_TRIANGLES, 0, m_data->vertices());
     }
 }
-void ModelImpl::unload() { m_data.reset(); }
-impl::ModelData_Base* ModelImpl::data() const { return m_data.get(); }
-bool ModelImpl::good() const { return m_data.get() != nullptr; }
+void ModelStorageImpl::unload() { m_data.reset(); }
+impl::ModelData_Base* ModelStorageImpl::data() const { return m_data.get(); }
+bool ModelStorageImpl::good() const { return m_data.get() != nullptr; }
 
 }

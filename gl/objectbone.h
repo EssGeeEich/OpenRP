@@ -6,17 +6,17 @@
 #include "material.h"
 
 namespace LuaApi {
-	class ObjectBoneImpl final : public DrawableBase {
-        friend class ObjectImpl;
+	class ModelBoneImpl final : public DrawableBase {
+        friend class ModelImpl;
         std::string m_name;
         std::uint32_t m_boneId;
-        Model m_model;
+        ModelStorage m_model;
         ObjectMaterial m_material;
         
         void SetName(std::string);
         void SetBoneId(std::uint32_t);
     public:
-        ObjectBoneImpl();
+        ModelBoneImpl();
         
         std::string Name() const;
         std::uint32_t Bone() const;
@@ -24,19 +24,19 @@ namespace LuaApi {
         void SetMaterial(ObjectMaterial);
     };
     
-    typedef RefCounted<ObjectBoneImpl> ObjectBone;
+    typedef RefCounted<ModelBoneImpl> ModelBone;
 }
 
-template <> struct MetatableDescriptor<LuaApi::ObjectBoneImpl> {
+template <> struct MetatableDescriptor<LuaApi::ModelBoneImpl> {
     static char const* name() { return "objectbone_mt"; }
     static char const* luaname() { return ""; }
     static char const* constructor() { return ""; }
-    static bool construct(LuaApi::ObjectBoneImpl* v) { return Lua::DefaultConstructor(v); }
-    static void metatable(Lua::member_function_storage<LuaApi::ObjectBoneImpl>& mt) {
-        mt["Name"] = Lua::Transform(&LuaApi::ObjectBoneImpl::Name);
-        mt["Bone"] = Lua::Transform(&LuaApi::ObjectBoneImpl::Bone);
-        mt["Material"] = Lua::Transform(&LuaApi::ObjectBoneImpl::Material);
-        mt["SetMaterial"] = Lua::Transform(&LuaApi::ObjectBoneImpl::SetMaterial);
+    static bool construct(LuaApi::ModelBoneImpl* v) { return Lua::DefaultConstructor(v); }
+    static void metatable(Lua::member_function_storage<LuaApi::ModelBoneImpl>& mt) {
+        mt["Name"] = Lua::Transform(&LuaApi::ModelBoneImpl::Name);
+        mt["Bone"] = Lua::Transform(&LuaApi::ModelBoneImpl::Bone);
+        mt["Material"] = Lua::Transform(&LuaApi::ModelBoneImpl::Material);
+        mt["SetMaterial"] = Lua::Transform(&LuaApi::ModelBoneImpl::SetMaterial);
     }
 };
 
